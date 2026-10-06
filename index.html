@@ -6,89 +6,164 @@
   <title>Tender Document Package Builder</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+      opacity: 0.9;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glow-indigo {
+      box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.25);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.35);
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-  <header class="border-b border-slate-800 bg-slate-900 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-    <div>
-      <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-        TENDER DOC BUILDER <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono border border-indigo-500/30">AI DEVFEST</span>
-      </h1>
-      <p class="text-xs text-slate-400" id="headerSub">Automated & Verified Package Generator</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <button type="button" id="langToggleBtn" class="px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow transition cursor-pointer">
-        বাংলা / English
-      </button>
-      <label class="cursor-pointer px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold transition text-white">
-        <span id="loadJsonLabel">Load requirements.json</span>
-        <input type="file" id="jsonInput" accept=".json" class="hidden" />
-      </label>
-    </div>
-  </header>
+  <!-- Ambient Glow Effects -->
+  <div class="fixed top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+  <div class="fixed bottom-0 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
-  <div id="tenderBanner" class="bg-slate-900/60 border-b border-slate-800 px-6 py-3">
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs max-w-7xl mx-auto">
-      <div><span class="text-slate-500 block">Tender ID:</span> <strong id="tId" class="text-indigo-400 font-mono">T-2026-0417</strong></div>
-      <div><span class="text-slate-500 block">Title:</span> <strong id="tTitle" class="text-white">Supply of IT Equipment</strong></div>
-      <div><span class="text-slate-500 block">Procuring Entity:</span> <strong id="tEntity" class="text-white">Example Directorate</strong></div>
-      <div><span class="text-slate-500 block">Bidder:</span> <strong id="tBidder" class="text-white">Example Company Ltd.</strong></div>
-      <div><span class="text-slate-500 block">Deadline:</span> <strong id="tDeadline" class="text-amber-400 font-mono">2026-10-20</strong></div>
-    </div>
-  </div>
-
-  <main class="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full">
-
-    <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300" id="sectionUpload">1. Upload PDF Documents</h2>
-        <span class="text-xs text-slate-400" id="limitNote">Max 30 PDFs, 50MB total</span>
-      </div>
-      
-      <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950/50 rounded-lg p-6 text-center transition cursor-pointer" onclick="document.getElementById('pdfInput').click()">
-        <p class="text-sm font-medium text-slate-300" id="dragNote">Click here to upload multiple PDF files</p>
-        <p class="text-xs text-slate-500 mt-1" id="fileValidNote">Only valid PDF files are accepted (Select .pdf files)</p>
-        <input type="file" id="pdfInput" accept=".pdf,application/pdf" multiple class="hidden" />
-      </div>
-
-      <div id="uploadedFilesContainer" class="mt-4 hidden">
-        <h3 class="text-xs font-semibold text-slate-400 mb-2" id="uploadedLabel">Uploaded Files:</h3>
-        <div id="fileCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
-      </div>
-    </div>
-
-    <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
-      <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300" id="sectionMatch">2. Document Checklist & Status</h2>
-        <div id="overallStatusBadge" class="text-xs px-3 py-1 rounded font-bold bg-rose-950 text-rose-300 border border-rose-600">
-          Missing mandatory documents
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-400 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-indigo-500/20">
+          T
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">TENDER DOC BUILDER</h1>
+            <span class="text-[10px] bg-indigo-500/15 text-indigo-300 font-mono font-semibold px-2 py-0.5 rounded-full border border-indigo-500/30">AI DEVFEST</span>
+          </div>
+          <p class="text-xs text-slate-400" id="headerSub">Automated & Verified Package Generator</p>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="flex items-center gap-3">
+        <button type="button" id="langToggleBtn" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700/80 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1.5">
+          <span>🌐</span> <span id="langBtnText">বাংলা / English</span>
+        </button>
+        <label class="cursor-pointer px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-xs font-bold text-white shadow-md shadow-indigo-600/20 border border-indigo-400/30 transition-all duration-200 active:scale-95 flex items-center gap-2">
+          <span>📂</span>
+          <span id="loadJsonLabel">Load requirements.json</span>
+          <input type="file" id="jsonInput" accept=".json" class="hidden" />
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tender Metadata Dashboard -->
+  <section class="border-b border-slate-800/60 bg-slate-900/40 px-6 py-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 max-w-7xl mx-auto">
+      <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80">
+        <span class="text-[11px] text-slate-400 font-medium block mb-1">Tender ID</span>
+        <strong id="tId" class="text-indigo-400 font-mono text-sm tracking-wide">T-2026-0417</strong>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80">
+        <span class="text-[11px] text-slate-400 font-medium block mb-1">Tender Title</span>
+        <strong id="tTitle" class="text-white text-xs truncate block font-semibold">Supply of IT Equipment</strong>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80">
+        <span class="text-[11px] text-slate-400 font-medium block mb-1">Procuring Entity</span>
+        <strong id="tEntity" class="text-white text-xs truncate block font-semibold">Example Directorate</strong>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80">
+        <span class="text-[11px] text-slate-400 font-medium block mb-1">Bidder</span>
+        <strong id="tBidder" class="text-white text-xs truncate block font-semibold">Example Company Ltd.</strong>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80">
+        <span class="text-[11px] text-slate-400 font-medium block mb-1">Submission Deadline</span>
+        <strong id="tDeadline" class="text-amber-400 font-mono text-sm tracking-wide">2026-10-20</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Container -->
+  <main class="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full">
+
+    <!-- 1. Upload Box -->
+    <div class="glass-card rounded-2xl p-6 shadow-xl">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-2.5">
+          <span class="h-6 w-6 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center">1</span>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-white" id="sectionUpload">Upload PDF Documents</h2>
+        </div>
+        <span class="text-xs text-slate-400 bg-slate-800/80 border border-slate-700/60 px-2.5 py-1 rounded-full font-mono" id="limitNote">Max 30 PDFs, 50MB total</span>
+      </div>
+      
+      <div class="border-2 border-dashed border-slate-700/80 hover:border-indigo-500/80 bg-slate-950/40 hover:bg-indigo-950/10 rounded-2xl p-8 text-center transition-all duration-200 cursor-pointer group" onclick="document.getElementById('pdfInput').click()">
+        <div class="h-12 w-12 mx-auto mb-3 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl group-hover:scale-110 transition-transform">
+          📄
+        </div>
+        <p class="text-sm font-semibold text-slate-200 group-hover:text-indigo-300 transition-colors" id="dragNote">Click here to upload multiple PDF files</p>
+        <p class="text-xs text-slate-400 mt-1" id="fileValidNote">Only valid PDF files are accepted (Select .pdf files)</p>
+        <input type="file" id="pdfInput" accept=".pdf,application/pdf" multiple class="hidden" />
+      </div>
+
+      <div id="uploadedFilesContainer" class="mt-5 hidden">
+        <h3 class="text-xs font-semibold text-slate-400 mb-2.5 uppercase tracking-wider" id="uploadedLabel">Uploaded Files:</h3>
+        <div id="fileCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </div>
+    </div>
+
+    <!-- 2. Checklist & Status Table -->
+    <div class="glass-card rounded-2xl p-6 shadow-xl">
+      <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="h-6 w-6 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center">2</span>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-white" id="sectionMatch">Document Checklist & Status</h2>
+        </div>
+        <div id="overallStatusBadge" class="text-xs px-3.5 py-1.5 rounded-full font-bold bg-rose-950/80 text-rose-300 border border-rose-600/80 shadow-sm flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-rose-500"></span> Missing mandatory documents
+        </div>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-slate-800/80">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="border-b border-slate-800 text-slate-400">
-              <th class="py-2.5 px-3">Order</th>
-              <th class="py-2.5 px-3">Document Title</th>
-              <th class="py-2.5 px-3">Type</th>
-              <th class="py-2.5 px-3">Matched File</th>
-              <th class="py-2.5 px-3">Expiry Date</th>
-              <th class="py-2.5 px-3">Status</th>
+            <tr class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+              <th class="py-3 px-4">Order</th>
+              <th class="py-3 px-4">Document Title</th>
+              <th class="py-3 px-4">Type</th>
+              <th class="py-3 px-4">Matched File</th>
+              <th class="py-3 px-4">Expiry Date</th>
+              <th class="py-3 px-4">Status</th>
             </tr>
           </thead>
-          <tbody id="requirementsTableBody"></tbody>
+          <tbody id="requirementsTableBody" class="divide-y divide-slate-800/60 bg-slate-950/30"></tbody>
         </table>
       </div>
     </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-lg p-5 flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h3 class="text-sm font-bold text-white" id="genTitle">3. Build Final Package</h3>
-        <p class="text-xs text-slate-400 mt-1" id="genSub">Package will include an official cover page, ordered pages, and footer counters.</p>
-        <div id="blockingReasons" class="text-xs text-rose-400 mt-2 font-mono"></div>
+    <!-- 3. Generator Bar -->
+    <div class="glass-card rounded-2xl p-6 flex flex-wrap items-center justify-between gap-6 shadow-2xl">
+      <div class="max-w-xl">
+        <div class="flex items-center gap-2.5 mb-1">
+          <span class="h-6 w-6 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center">3</span>
+          <h3 class="text-sm font-bold text-white tracking-wide" id="genTitle">Build Final Package</h3>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed" id="genSub">Package will include an official cover page, ordered pages, and footer counters.</p>
+        <div id="blockingReasons" class="text-xs text-rose-400 mt-2 font-mono space-y-1"></div>
       </div>
-      <button id="generateBtn" disabled class="px-6 py-2.5 rounded bg-slate-800 text-slate-500 font-bold text-xs uppercase tracking-wider cursor-not-allowed transition">
+      <button id="generateBtn" disabled class="px-7 py-3 rounded-xl bg-slate-800/80 text-slate-500 font-bold text-xs uppercase tracking-wider cursor-not-allowed transition-all duration-300 border border-slate-700/40">
         Generate Package PDF
       </button>
     </div>
@@ -100,13 +175,13 @@
       en: {
         headerSub: "Automated & Verified Package Generator",
         loadJson: "Load requirements.json",
-        sectionUpload: "1. Upload PDF Documents",
+        sectionUpload: "Upload PDF Documents",
         limitNote: "Max 30 PDFs, 50MB total",
         dragNote: "Click here to upload multiple PDF files",
         fileValidNote: "Only valid PDF files are accepted",
         uploadedLabel: "Uploaded Files:",
-        sectionMatch: "2. Document Checklist & Status",
-        genTitle: "3. Build Final Package",
+        sectionMatch: "Document Checklist & Status",
+        genTitle: "Build Final Package",
         genSub: "Package will include an official cover page, ordered pages, and footer counters.",
         genBtn: "Generate Package PDF",
         building: "Generating package...",
@@ -126,13 +201,13 @@
       bn: {
         headerSub: "স্বয়ংক্রিয় ও যাচাইকৃত প্যাকেজ জেনারেটর",
         loadJson: "requirements.json লোড করুন",
-        sectionUpload: "১. পিডিএফ ডকুমেন্টস আপলোড",
+        sectionUpload: "পিডিএফ ডকুমেন্টস আপলোড",
         limitNote: "সর্বোচ্চ ৩০টি ফাইল, মোট ৫০ এমবি",
         dragNote: "একাধিক পিডিএফ ফাইল আপলোড করতে এখানে ক্লিক করুন",
         fileValidNote: "শুধুমাত্র সঠিক পিডিএফ ফাইল গ্রহণযোগ্য",
         uploadedLabel: "আপলোডকৃত ফাইলসমূহ:",
-        sectionMatch: "২. ডকুমেন্ট চেকলিস্ট ও স্ট্যাটাস",
-        genTitle: "৩. ফাইনাল প্যাকেজ তৈরি করুন",
+        sectionMatch: "ডকুমেন্ট চেকলিস্ট ও স্ট্যাটাস",
+        genTitle: "ফাইনাল প্যাকেজ তৈরি করুন",
         genSub: "প্যাকেজে অফিসিয়াল কভার পেজ, সুবিন্যস্ত পাতা এবং ফুটার নাম্বার থাকবে।",
         genBtn: "প্যাকেজ পিডিএফ তৈরি করুন",
         building: "প্যাকেজ তৈরি হচ্ছে...",
@@ -343,15 +418,15 @@
       if (uploadedFiles.length > 0) {
         filesContainer.classList.remove('hidden');
         fileCards.innerHTML = uploadedFiles.map(f => {
-          const borderClass = f.isDuplicate ? 'border-rose-600 bg-rose-950/30' : 'border-slate-800 bg-slate-950';
-          const badge = f.isDuplicate ? '<span class="text-[9px] bg-rose-600 text-white font-bold px-1.5 py-0.5 rounded">' + t.duplicate + '</span>' : '';
-          return '<div class="p-2.5 rounded border ' + borderClass + ' flex justify-between items-center text-xs">' +
+          const borderClass = f.isDuplicate ? 'border-rose-500/80 bg-rose-950/30' : 'border-slate-800 bg-slate-900/60';
+          const badge = f.isDuplicate ? '<span class="text-[9px] bg-rose-600 text-white font-bold px-2 py-0.5 rounded-full">' + t.duplicate + '</span>' : '';
+          return '<div class="p-3 rounded-xl border ' + borderClass + ' flex justify-between items-center text-xs transition-all hover:border-slate-700">' +
             '<div class="truncate mr-2">' +
-              '<p class="font-medium truncate text-white">' + f.name + '</p>' +
-              '<p class="text-[10px] text-slate-400 font-mono">' + f.pages + ' pages | ' + f.size + '</p>' +
+              '<p class="font-medium truncate text-slate-100">' + f.name + '</p>' +
+              '<p class="text-[10px] text-slate-400 font-mono mt-0.5">' + f.pages + ' pages | ' + f.size + '</p>' +
               badge +
             '</div>' +
-            '<button onclick="removeFile(\'' + f.id + '\')" class="text-slate-500 hover:text-rose-400 p-1 font-bold">✕</button>' +
+            '<button onclick="removeFile(\'' + f.id + '\')" class="text-slate-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 font-bold cursor-pointer transition-colors">✕</button>' +
           '</div>';
         }).join('');
       } else {
@@ -373,9 +448,9 @@
           blockingReasons.push(req.id + ' (' + title + '): ' + status);
         }
 
-        let badgeStyle = "bg-slate-800 text-slate-400 border border-slate-700";
-        if (status === 'OK') badgeStyle = "bg-emerald-950/80 text-emerald-400 border border-emerald-600 font-bold";
-        else if (isBlocking) badgeStyle = "bg-rose-950/80 text-rose-300 border border-rose-600 font-bold";
+        let badgeStyle = "bg-slate-800/80 text-slate-400 border border-slate-700/60";
+        if (status === 'OK') badgeStyle = "bg-emerald-950/80 text-emerald-400 border border-emerald-500/80 font-bold";
+        else if (isBlocking) badgeStyle = "bg-rose-950/80 text-rose-300 border border-rose-500/80 font-bold";
 
         const fileOptions = uploadedFiles.map(f => {
           const disabled = f.isDuplicate ? 'disabled' : '';
@@ -385,32 +460,32 @@
         }).join('');
 
         const reqTypeBadge = req.mandatory 
-          ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-950/80 text-sky-400 border border-sky-800">' + t.required + '</span>'
-          : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400">' + t.optional + '</span>';
+          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-500/30">' + t.required + '</span>'
+          : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">' + t.optional + '</span>';
 
         const expiryInput = req.has_expiry
-          ? '<input type="date" value="' + (match.expiryDate || '') + '" onchange="handleExpiryChange(\'' + req.id + '\', this.value)" class="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 text-xs text-white font-mono" />'
-          : '<span class="text-slate-600 font-mono">-</span>';
+          ? '<input type="date" value="' + (match.expiryDate || '') + '" oninput="handleExpiryChange(\'' + req.id + '\', this.value)" onchange="handleExpiryChange(\'' + req.id + '\', this.value)" class="bg-slate-900 border border-slate-700/80 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-xs text-white font-mono cursor-pointer transition-colors" />'
+          : '<span class="text-slate-600 font-mono text-xs">-</span>';
 
         const statusKey = 'status' + status.replace(/\s+/g, '');
         const displayStatus = t[statusKey] || status;
 
-        return '<tr class="border-b border-slate-800/60 hover:bg-slate-800/30 transition">' +
-          '<td class="py-2.5 px-3 font-mono font-bold text-slate-400">' + req.order + '</td>' +
-          '<td class="py-2.5 px-3">' +
-            '<span class="font-medium text-white">' + title + '</span>' +
-            '<span class="text-[10px] text-slate-500 block font-mono">' + req.id + '</span>' +
+        return '<tr class="hover:bg-slate-900/50 transition-colors">' +
+          '<td class="py-3 px-4 font-mono font-bold text-slate-400">' + req.order + '</td>' +
+          '<td class="py-3 px-4">' +
+            '<span class="font-semibold text-white block">' + title + '</span>' +
+            '<span class="text-[10px] text-slate-500 block font-mono mt-0.5">' + req.id + '</span>' +
           '</td>' +
-          '<td class="py-2.5 px-3">' + reqTypeBadge + '</td>' +
-          '<td class="py-2.5 px-3">' +
-            '<select onchange="handleMatchChange(\'' + req.id + '\', this.value)" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white max-w-[200px]">' +
+          '<td class="py-3 px-4">' + reqTypeBadge + '</td>' +
+          '<td class="py-3 px-4">' +
+            '<select onchange="handleMatchChange(\'' + req.id + '\', this.value)" class="bg-slate-900 border border-slate-700/80 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-xs text-slate-200 max-w-[210px] cursor-pointer transition-colors">' +
               '<option value="">' + t.selectFile + '</option>' +
               fileOptions +
             '</select>' +
           '</td>' +
-          '<td class="py-2.5 px-3">' + expiryInput + '</td>' +
-          '<td class="py-2.5 px-3">' +
-            '<span class="px-2.5 py-1 rounded text-[11px] inline-block ' + badgeStyle + '">' + displayStatus + '</span>' +
+          '<td class="py-3 px-4">' + expiryInput + '</td>' +
+          '<td class="py-3 px-4">' +
+            '<span class="px-2.5 py-1 rounded-full text-[11px] inline-flex items-center gap-1 ' + badgeStyle + '">' + displayStatus + '</span>' +
           '</td>' +
         '</tr>';
       }).join('');
@@ -420,16 +495,16 @@
       const blockReasonsEl = document.getElementById('blockingReasons');
 
       if (allOK) {
-        overallBadge.className = "text-xs px-3 py-1 rounded font-bold bg-emerald-950 text-emerald-400 border border-emerald-600";
-        overallBadge.textContent = t.readyToBuild;
+        overallBadge.className = "text-xs px-3.5 py-1.5 rounded-full font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-500/80 shadow-sm flex items-center gap-1.5";
+        overallBadge.innerHTML = '<span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> ' + t.readyToBuild;
         genBtn.disabled = false;
-        genBtn.className = "px-6 py-2.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-lg shadow-emerald-900/40 transition";
+        genBtn.className = "px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs uppercase tracking-wider cursor-pointer glow-emerald active:scale-95 transition-all duration-200";
         blockReasonsEl.textContent = "";
       } else {
-        overallBadge.className = "text-xs px-3 py-1 rounded font-bold bg-rose-950 text-rose-300 border border-rose-600";
-        overallBadge.textContent = t.cannotBuild;
+        overallBadge.className = "text-xs px-3.5 py-1.5 rounded-full font-bold bg-rose-950/80 text-rose-300 border border-rose-500/80 shadow-sm flex items-center gap-1.5";
+        overallBadge.innerHTML = '<span class="h-2 w-2 rounded-full bg-rose-500"></span> ' + t.cannotBuild;
         genBtn.disabled = true;
-        genBtn.className = "px-6 py-2.5 rounded bg-slate-800 text-slate-500 font-bold text-xs uppercase tracking-wider cursor-not-allowed transition";
+        genBtn.className = "px-7 py-3 rounded-xl bg-slate-800/80 text-slate-500 font-bold text-xs uppercase tracking-wider cursor-not-allowed transition-all duration-200 border border-slate-700/40";
         blockReasonsEl.innerHTML = blockingReasons.map(r => '• ' + r).join('<br>');
       }
     }
